@@ -14,6 +14,7 @@ wrapper {
 }
 
 apply plugin: 'java'
+apply plugin: 'jacoco'
 apply plugin: 'groovy'
 apply plugin: 'org.springframework.boot'
 apply plugin: 'io.spring.dependency-management'
@@ -47,11 +48,49 @@ dependencies {
     //testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.1.0'
     testCompile group: 'junit', name: 'junit', version: '4.12'
     implementation 'com.h2database:h2:1.4.200'
+
+    // Spock framework configuration
+    testCompile("org.spockframework:spock-core:${spockFrameWorkVersion}")
+    testCompile("org.spockframework:spock-spring:${spockFrameWorkVersion}")
 }
 
 dependencyManagement {
     imports {
         mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+    }
+}
+
+jacoco {
+    toolVersion = "${jaccocoVersion}"
+}
+
+jacocoTestReport{
+    reports {
+        xml.enabled true
+        xml.destination file("${buildDir}/reports/jacoco/jacocoTestReport.xml")
+        html.destination file("${buildDir}/jacocoHtml")
+    }
+}
+
+jacocoTestCoverageVerification{
+    violationRules{
+        rule{
+            limit{
+                counter = 'LINE'
+                value = 'COVEREDRATION'
+                minimum = 0.8
+            }
+        }
+    }
+}
+
+check.dependsOn jacocoTestCoverageVerification
+
+sourceSets {
+    test {
+        java { srcDirs =  ['src/test/unit/java'] }
+        groovy { srcDirs = ['src/test/unit/groovy','src/test/layer/groovy'] }
+
     }
 }
 

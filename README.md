@@ -1,17 +1,43 @@
 ## Springboot with Test Driven Development (TDD)
 
+### Junit vs Spock
+Spock and Junit both are great testing framework for API Testing.
+
+Spock framework test case write in Groovy. 
+Junit - build.gradle
+```yaml
+testCompile 'junit:junit:4.12'
+testImplementation 'org.springframework.boot:spring-boot-starter-test'
+```
+Spock - build.gradle
+```yaml
+// Spock framework configuration
+testCompile("org.spockframework:spock-core:${spockFrameWorkVersion}")
+testCompile("org.spockframework:spock-spring:${spockFrameWorkVersion}")
+```
+
 Perform following step to build micro service by TDD approach.
 
-Basic principal to TDD approach is AAA
+Junit to TDD approach is AAA
+```markdown
+  `ARRANGE`
+    Mock the calls
 
- > `ARRANGE`
-    > Mock the calls
->
- > `ACT`
-    > Perform action  
-> 
- > `ASSERT`
-    > Validate the response
+  `ACT`
+     Perform action  
+ 
+  `ASSERT`
+     Validate the response
+```
+
+Spock framework
+```markdown
+Given: ""
+When: ""
+Then: ""
+```
+
+
 
 
 
@@ -27,7 +53,7 @@ public class EmployeeApplication {
 }
 
 ```
-2. Write Integration Test first
+2. Write Integration in Junit Test first
 ```java
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -47,6 +73,29 @@ public class IntegrationTest {
         //assert
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody().getName()).isEqualTo("John");
+
+    }
+}
+```
+
+```groovy
+//Spock test
+@RunWith(SpringRunner.class)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+class IntegrationSpec extends Specification{
+
+    @Autowired
+    private TestRestTemplate restTemplate;
+
+    def "Get employee and return Employee details"(){
+        given: "Mock the request"
+
+        when: "Validate the rest endpoint"
+        def response = restTemplate
+                .getForEntity("/employees/John", Employee.class)
+        then: "validate the response."
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK)
+        assertThat(response.getBody().getName()).isEqualTo("John")
 
     }
 }
