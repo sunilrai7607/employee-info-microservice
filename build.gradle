@@ -6,6 +6,7 @@ buildscript {
 
     dependencies {
         classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+        classpath "org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:2.8"
     }
 }
 
@@ -16,6 +17,7 @@ wrapper {
 apply plugin: 'java'
 apply plugin: 'jacoco'
 apply plugin: 'groovy'
+apply plugin: 'org.sonarqube'
 apply plugin: 'org.springframework.boot'
 apply plugin: 'io.spring.dependency-management'
 
@@ -28,6 +30,19 @@ targetCompatibility = '1.8'
 configurations {
     compileOnly {
         extendsFrom annotationProcessor
+    }
+}
+
+sonarqube {
+    properties {
+        property "sonar.projectName", "Java :: Employee Info MicroService :: SonarQube Scanner for Gradle"
+        property "sonar.projectKey", "org.sonarqube:employee-info-microservice"
+        property "sonar.exclusions", "${project.buildDir}/classes/java/main"
+        property "sonar.sources", "src/main"
+        property "sonar.tests", "src/test"
+        property "sonar.login", "admin"
+        property "sonar.password", "testadmin"
+        property "sonar.jacoco.reportPath", "${project.buildDir}/jacoco/test.exec"
     }
 }
 
@@ -64,7 +79,7 @@ jacoco {
     toolVersion = "${jaccocoVersion}"
 }
 
-jacocoTestReport{
+jacocoTestReport {
     reports {
         xml.enabled true
         xml.destination file("${buildDir}/reports/jacoco/jacocoTestReport.xml")
@@ -72,12 +87,12 @@ jacocoTestReport{
     }
 }
 
-jacocoTestCoverageVerification{
-    violationRules{
-        rule{
-            limit{
+jacocoTestCoverageVerification {
+    violationRules {
+        rule {
+            limit {
                 counter = 'LINE'
-                value = 'COVEREDRATION'
+                value = 'TOTALCOUNT'
                 minimum = 0.8
             }
         }
@@ -88,13 +103,20 @@ check.dependsOn jacocoTestCoverageVerification
 
 sourceSets {
     test {
-        java { srcDirs =  ['src/test/unit/java'] }
-        groovy { srcDirs = ['src/test/unit/groovy','src/test/layer/groovy'] }
+        java { srcDirs = ['src/test/unit/java'] }
+        groovy { srcDirs = ['src/test/unit/groovy', 'src/test/layer/groovy'] }
 
     }
 }
 
 test {
-    useJUnitPlatform()
+    finalizedBy jacocoTestReport, jacocoTestCoverageVerification
+    systemProperty 'spring.profiles.active', 'test'
+    jacoco {
+        destinationFile = file("$buildDir/jacoco/jacocoTest.exec")
+        classDumpDir = file("$buildDir/jacoco/classpathdumps")
+
+    }
 }
 
+//tasks['sonarqube'].dependsOn test

@@ -28,6 +28,6 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Override
     @Cacheable("employees")
     public Employee getEmployee(final String name) {
-        return Optional.ofNullable(employeeRepository.findByName(name)).orElseThrow(() -> new EmployeeNotFoundException());
+        return Optional.ofNullable(employeeRepository.findByName(name)).orElseThrow(EmployeeNotFoundException::new);
     }
 }

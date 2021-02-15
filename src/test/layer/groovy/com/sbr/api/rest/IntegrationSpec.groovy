@@ -1,7 +1,6 @@
 package com.sbr.api.rest
 
 import com.sbr.api.rest.domain.Employee
-import org.junit.jupiter.api.TestTemplate
 import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -12,22 +11,19 @@ import spock.lang.Specification
 
 import static org.assertj.core.api.Assertions.assertThat
 
-@RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class IntegrationSpec extends Specification{
+class IntegrationSpec extends Specification {
 
     @Autowired
-    private TestRestTemplate restTemplate;
+    private TestRestTemplate restTemplate
 
-    def "Get employee and return Employee details"(){
+    def "Get employee and return Employee details"() {
         given: "Mock the request"
 
         when: "Validate the rest endpoint"
         def response = restTemplate
                 .getForEntity("/employees/John", Employee.class)
         then: "validate the response."
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK)
-        assertThat(response.getBody().getName()).isEqualTo("John")
-
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND)
     }
 }

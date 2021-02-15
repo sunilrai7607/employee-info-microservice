@@ -1,4 +1,4 @@
-## Springboot with Test Driven Development (TDD)
+## Springboot with TDD, BDD and SonarQube Configuration
 
 ### Junit vs Spock
 Spock and Junit both are great testing framework for API Testing.
@@ -80,23 +80,20 @@ public class IntegrationTest {
 
 ```groovy
 //Spock test
-@RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class IntegrationSpec extends Specification{
+class IntegrationSpec extends Specification {
 
     @Autowired
-    private TestRestTemplate restTemplate;
+    private TestRestTemplate restTemplate
 
-    def "Get employee and return Employee details"(){
+    def "Get employee and return Employee details"() {
         given: "Mock the request"
 
         when: "Validate the rest endpoint"
         def response = restTemplate
                 .getForEntity("/employees/John", Employee.class)
         then: "validate the response."
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK)
-        assertThat(response.getBody().getName()).isEqualTo("John")
-
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND)
     }
 }
 ```
@@ -133,6 +130,45 @@ public class EmployeeControllerTest {
 }
 
 ```
+
+```groovy
+@Import([MockTestConfig])
+@WebMvcTest(controllers = [EmployeeController])
+class EmployeeControllerSpec extends Specification {
+
+    @Autowired
+    protected MockMvc mockMvc
+
+    @Autowired
+    EmployeeService employeeService
+
+    def employee = Mock(Employee)
+
+    def " getEmployee_ShouldReturnEmploy "() {
+        given: "Mock the findByName"
+        employeeService.getEmployee(*_) >> employee
+        employee.getName() >> "John"
+
+        when:
+        def response = mockMvc.perform(get("/employees/John"))
+
+        then:
+        response.andExpect(status().isOk())
+    }
+
+    def "getEmployee_notFound"() {
+        given: "Mock the findByName"
+        employeeService.getEmployee(*_) >> { throw new EmployeeNotFoundException()}
+
+        when: "Call the endpoint"
+        def response = mockMvc.perform(get("/employees/John"))
+
+        then: " verify"
+        response.andExpect(status().isNotFound())
+
+    }
+}
+```
 4. Write unit test for Service class and Repository layer
 ```java
 @RunWith(MockitoJUnitRunner.class)
@@ -167,6 +203,43 @@ public class EmployeeServiceTest {
 
         //act
         employeeService.getEmployee("John");
+    }
+}
+```
+
+```groovy
+class EmployeeServiceSpec extends Specification {
+
+    EmployeeService employeeService
+    def employeeRepository = Mock(EmployeeRepository)
+    def employee = Mock(Employee)
+
+    def setup() {
+        employeeService = new EmployeeServiceImpl(employeeRepository)
+    }
+
+
+    def "getEmployeeDetails_returnEmployeeInfo"() {
+        given: "Mock the findByName"
+        employeeRepository.findByName(*_) >> employee
+        employee.getName() >> "John"
+
+        when: "call the getEmployee"
+        def employee = employeeService.getEmployee("John")
+
+        then: "Validate the name"
+        employee.getName() == "John"
+    }
+
+    def "getEmployeeDetails_whenNotFound"() {
+        given: "Mock the findByName"
+        employeeRepository.findByName(*_) >> null
+
+        when: "call the getEmployee"
+        employeeService.getEmployee("John")
+
+        then: "Validate the name"
+        thrown(EmployeeNotFoundException)
     }
 }
 ```

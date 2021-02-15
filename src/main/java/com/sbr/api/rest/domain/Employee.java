@@ -20,7 +20,7 @@ public class Employee implements Serializable {
     private static final long serialVersionUID = 46374280348088200L;
     @Id
     @GeneratedValue
-    private String _id;
+    private String id;
 
     private String name;
 }
